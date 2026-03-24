@@ -1,0 +1,11 @@
+date,roll_number,student_name,class_code,class_name,faculty_name,status,confidence_score
+2024-01-15,21CS045,Arjun Reddy,CS301,Data Structures & Algorithms,Prof. Anita Sharma,present,97
+2024-01-15,21CS046,Sneha Patel,CS301,Data Structures & Algorithms,Prof. Anita Sharma,absent,0
+2024-01-15,21CS047,Karan Singh,CS301,Data Structures & Algorithms,Prof. Anita Sharma,present,94
+2024-01-16,21CS045,Arjun Reddy,CS401,Machine Learning,Prof. Anita Sharma,present,96
+2024-01-16,21CS047,Karan Singh,CS401,Machine Learning,Prof. Anita Sharma,present,91
+2024-01-17,21CS045,Arjun Reddy,MA101,Engineering Mathematics,Dr. Priya Nair,absent,0
+2024-01-17,21CS046,Sneha Patel,MA101,Engineering Mathematics,Dr. Priya Nair,present,88
+2024-01-18,21CS045,Arjun Reddy,CS301,Data Structures & Algorithms,Prof. Anita Sharma,present,95
+2024-01-19,21CS046,Sneha Patel,CS401,Machine Learning,Prof. Anita Sharma,present,92
+2024-01-22,21CS047,Karan Singh,MA101,Engineering Mathematics,Dr. Priya Nair,present,89
