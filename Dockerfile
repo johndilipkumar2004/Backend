@@ -1,6 +1,5 @@
 FROM python:3.11-slim
 
-# Install system dependencies for dlib/face-recognition
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
@@ -9,17 +8,21 @@ RUN apt-get update && apt-get install -y \
     libx11-dev \
     libgtk-3-dev \
     python3-dev \
+    git \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY requirements.txt .
 
-# Install dlib first separately
-RUN pip install --upgrade pip
-RUN pip install cmake
-RUN pip install dlib==19.24.2
+RUN pip install --upgrade pip setuptools wheel
+
+# Install dlib from source with correct flags
+RUN pip install --verbose dlib==19.24.4 --no-cache-dir
+
 RUN pip install face-recognition==1.3.0
+
 RUN pip install -r requirements.txt
 
 COPY . .
