@@ -73,14 +73,68 @@ async def get_faculty_classes(faculty_id: str, current_user: dict = Depends(get_
 
 @router.get("/{faculty_id}/students")
 async def get_faculty_students(faculty_id: str, current_user: dict = Depends(get_current_user)):
-    classes_res = supabase_admin.table("classes").select("department_id, year_id, section_id") \
+    # 1. Get all classes taught by this faculty
+    classes_res = supabase_admin.table("classes") \
+        .select("id, department_id, year_id, section_id") \
         .eq("faculty_id", faculty_id).execute()
     classes = classes_res.data or []
+
     if not classes:
         return []
 
-    students_res = supabase_admin.table("students").select("*").execute()
-    return students_res.data or []
+    # 2. Get all class IDs for this faculty
+    class_ids = [c["id"] for c in classes]
+
+    # 3. Get all students who have attendance records in these classes
+    #    (i.e., students enrolled in faculty's classes)
+    att_res = supabase_admin.table("attendance") \
+        .select("student_id, student_name, status") \
+        .in_("class_id", class_ids).execute()
+    att_records = att_res.data or []
+
+    if not att_records:
+        # Fallback: return all students with 0% attendance
+        students_res = supabase_admin.table("students").select("*").execute()
+        students = students_res.data or []
+        for s in students:
+            s["attendance_percentage"] = 0
+            s["total_classes"] = 0
+            s["present_count"] = 0
+            s["absent_count"] = 0
+        return students
+
+    # 4. Group attendance by student and calculate percentage
+    from collections import defaultdict
+    student_att = defaultdict(lambda: {"present": 0, "absent": 0, "name": ""})
+    for r in att_records:
+        sid = r["student_id"]
+        student_att[sid]["name"] = r.get("student_name", "")
+        status = (r.get("status") or "").lower()
+        if status == "present":
+            student_att[sid]["present"] += 1
+        else:
+            student_att[sid]["absent"] += 1
+
+    # 5. Fetch full student details for these students
+    student_ids = list(student_att.keys())
+    students_res = supabase_admin.table("students") \
+        .select("*").in_("student_id", student_ids).execute()
+    students = students_res.data or []
+
+    # 6. Attach attendance stats to each student
+    result = []
+    for s in students:
+        sid = s["student_id"]
+        att = student_att.get(sid, {"present": 0, "absent": 0})
+        total = att["present"] + att["absent"]
+        percentage = round(att["present"] / total * 100, 1) if total > 0 else 0
+        s["attendance_percentage"] = percentage
+        s["present_count"] = att["present"]
+        s["absent_count"] = att["absent"]
+        s["total_classes"] = total
+        result.append(s)
+
+    return sorted(result, key=lambda x: x["attendance_percentage"])
 
 
 @router.get("/{faculty_id}/attendance/stats")

@@ -10,7 +10,7 @@ EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USERNAME = os.getenv("EMAIL_USERNAME", "")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "")
-EMAIL_FROM = os.getenv("EMAIL_FROM", "Smart Attendance AI")
+EMAIL_FROM_NAME = os.getenv("EMAIL_FROM", "Ideal Institute of Technology")
 
 
 class EmailService:
@@ -28,7 +28,7 @@ class EmailService:
         body = f"""
 Dear Parent/Guardian,
 
-This is an automated attendance alert from Smart Attendance AI.
+This is an automated attendance alert from Ideal Institute of Technology.
 
 Your child {student_name} (Roll No: {roll_number}) was marked ABSENT today in:
 
@@ -43,7 +43,7 @@ If you believe this is an error, please contact the faculty directly.
 
 Regards,
 Smart Attendance AI System
-University Attendance Management
+Ideal Institute of Technology
         """
         return await self._send_email(parent_email, subject, body)
 
@@ -59,11 +59,13 @@ University Attendance Management
         if not EMAIL_USERNAME or not EMAIL_PASSWORD:
             # Email not configured — log and return success for dev mode
             print(f"📧 [DEV MODE] Email to {to_email}: {subject}")
-            return {"success": True, "message": "Email logged (dev mode — configure SMTP to send)"}
+            print("⚠️  Set EMAIL_USERNAME and EMAIL_PASSWORD in your .env file to send real emails.")
+            return {"success": False, "message": "Email not configured. Please set EMAIL_USERNAME and EMAIL_PASSWORD in .env"}
 
         try:
             msg = MIMEMultipart("alternative")
-            msg["From"] = EMAIL_FROM
+            # FIX: Use actual email address in From header, not just display name
+            msg["From"] = f"{EMAIL_FROM_NAME} <{EMAIL_USERNAME}>"
             msg["To"] = to_email
             msg["Subject"] = subject
             msg.attach(MIMEText(body, "plain"))
@@ -76,8 +78,16 @@ University Attendance Management
                 password=EMAIL_PASSWORD,
                 start_tls=True,
             )
+            print(f"✅ Email sent to {to_email}: {subject}")
             return {"success": True, "message": f"Email sent to {to_email}"}
+        except aiosmtplib.SMTPAuthenticationError:
+            print("❌ SMTP Auth failed — check EMAIL_USERNAME and EMAIL_PASSWORD in .env")
+            return {"success": False, "message": "Authentication failed. Use a Gmail App Password, not your regular password."}
+        except aiosmtplib.SMTPConnectError:
+            print("❌ SMTP Connect failed — check EMAIL_HOST and EMAIL_PORT in .env")
+            return {"success": False, "message": "Could not connect to SMTP server. Check EMAIL_HOST and EMAIL_PORT."}
         except Exception as e:
+            print(f"❌ Email error: {e}")
             return {"success": False, "message": str(e)}
 
 

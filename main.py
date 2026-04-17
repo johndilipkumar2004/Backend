@@ -9,7 +9,7 @@ from routes import (
     auth_router, students_router, faculty_router,
     attendance_router, recognition_router, camera_router,
     analytics_router, dashboard_router, departments_router,
-    session_router, admin_router,
+    session_router, admin_router, messages_router,  # ← ADDED messages_router
 )
 
 app = FastAPI(
@@ -40,6 +40,7 @@ app.include_router(analytics_router)
 app.include_router(dashboard_router)
 app.include_router(departments_router)
 app.include_router(session_router)
+app.include_router(messages_router)  # ← ADDED
 
 
 @app.get("/", tags=["Health"])

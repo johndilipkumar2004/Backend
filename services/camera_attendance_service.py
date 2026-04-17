@@ -38,6 +38,23 @@ def get_current_period() -> int:
 class CameraAttendanceService:
 
     async def process_frame(self, image_base64: str, class_id: str, faculty_id: str) -> dict:
+
+        # ✅ Validate class_id
+        if not class_id or class_id.strip() == "":
+            return {
+                "success": False,
+                "recognized": False,
+                "reason": "No class selected. Please select a class before scanning.",
+            }
+
+        # ✅ Validate faculty_id
+        if not faculty_id or faculty_id.strip() == "":
+            return {
+                "success": False,
+                "recognized": False,
+                "reason": "Faculty ID is missing.",
+            }
+
         result = face_service.recognize_face(image_base64)
 
         if not result.get("recognized"):
@@ -69,9 +86,12 @@ class CameraAttendanceService:
         student_name = student["student_name"]
 
         # Get subject_id from class
-        class_res = supabase_admin.table("classes").select("subject_id") \
-            .eq("id", class_id).execute()
-        subject_id = class_res.data[0]["subject_id"] if class_res.data else None
+        try:
+            class_res = supabase_admin.table("classes").select("subject_id") \
+                .eq("id", class_id).execute()
+            subject_id = class_res.data[0]["subject_id"] if class_res.data else None
+        except Exception:
+            subject_id = None
 
         today = str(date.today())
         now_time = datetime.now().strftime("%H:%M:%S")
